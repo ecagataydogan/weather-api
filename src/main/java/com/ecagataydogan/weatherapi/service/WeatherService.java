@@ -31,7 +31,10 @@ public class WeatherService {
 
     public WeatherDto getWeatherByCityName(String city) {
         Optional<Weather> weatherOptional = weatherRepository.findFirstByRequestedCityNameOrderByUpdatedTimeDesc(city);
-        if (!weatherOptional.isPresent()) {
+        if (weatherOptional.isEmpty()) {
+            return WeatherDto.convert(getWeatherFromWeatherStack(city));
+        }
+        if(weatherOptional.get().getUpdatedTime().isBefore(LocalDateTime.now().minusSeconds(30))) {
             return WeatherDto.convert(getWeatherFromWeatherStack(city));
         }
 
