@@ -6,8 +6,13 @@ import com.ecagataydogan.weatherapi.model.Weather;
 import com.ecagataydogan.weatherapi.repository.WeatherRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -16,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Service
+@CacheConfig(cacheNames = "weathers")
 public class WeatherService {
     private static final String API_URL ="http://api.weatherstack.com/current?access_key=96f0c2810b2aa460379dff2a14e4838a&query=";
     private final WeatherRepository weatherRepository;
@@ -29,6 +35,7 @@ public class WeatherService {
         this.objectMapper = objectMapper;
     }
 
+    @Cacheable(key = "#city")
     public WeatherDto getWeatherByCityName(String city) {
         Optional<Weather> weatherOptional = weatherRepository.findFirstByRequestedCityNameOrderByUpdatedTimeDesc(city);
         if (weatherOptional.isEmpty()) {
@@ -64,5 +71,12 @@ public class WeatherService {
                 ,LocalDateTime.parse(weatherResponse.location().localtime(),dateTimeFormatter));
 
         return weatherRepository.save(weather);
+    }
+
+    @CacheEvict(allEntries = true)
+    @PostConstruct
+    @Scheduled(fixedRateString = "10000")
+    public void clearCache() {
+
     }
 }
