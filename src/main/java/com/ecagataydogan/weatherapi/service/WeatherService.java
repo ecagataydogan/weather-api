@@ -41,7 +41,7 @@ public class WeatherService {
         if (weatherOptional.isEmpty()) {
             return WeatherDto.convert(getWeatherFromWeatherStack(city));
         }
-        if(weatherOptional.get().getUpdatedTime().isBefore(LocalDateTime.now().minusSeconds(30))) {
+        if(weatherOptional.get().getUpdatedTime().isBefore(LocalDateTime.now().minusMinutes(10))) {
             return WeatherDto.convert(getWeatherFromWeatherStack(city));
         }
 
